@@ -15,12 +15,15 @@ int main(){
     while(win.isOpen()){
 
         while(win.pollEvent(event)){
+
             if(event.type == sf::Event::Closed)
                 win.close();
+
+            calculator.checkClick(event);
         }
 
         win.clear(sf::Color::White);
-        calculator.update(win);
+        calculator.update(win, event);
         win.display();
 
     }

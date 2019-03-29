@@ -19,7 +19,6 @@ namespace Useful{
 
             std::string information;
 
-
             void draw(sf::RenderWindow& win);
 
             bool inside() ;
