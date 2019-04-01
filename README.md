@@ -1,3 +1,5 @@
 # Calculator
-A calculator with a pretty interface and standard operation and sounds using SFML
+A calculator with a pretty interface and standard operation.
+It also has sounds.
+Using SFML
 
