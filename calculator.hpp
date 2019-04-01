@@ -6,6 +6,7 @@
 #include <windows.h>
 #include<sstream>
 #include<iomanip>
+#include<SFML/Audio.hpp>
 
 
 #define NUM_BUTTONS 21
@@ -20,15 +21,18 @@ namespace Calc{
 
 
     class Calculator{
+            sf::Font font;
+            sf::SoundBuffer buffer[3];
+            sf::Sound sound;
+
             std::vector<Useful::Button> buttons;
 
             std::vector<std::string> equation;
-
             std::vector<std::string> symbols;
-
             std::string answer;
 
-            sf::Font font;
+            bool mute;
+
 
             void draw(sf::RenderWindow& win);
 

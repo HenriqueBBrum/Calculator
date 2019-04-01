@@ -25,6 +25,17 @@ Calculator::Calculator(){
     if(!font.loadFromFile("Font.ttf"))
         std::abort();
 
+
+    if (!buffer[0].loadFromFile("Sound/bipNumber.wav"))
+        std::abort();
+
+    if (!buffer[1].loadFromFile("Sound/bip=.wav"))
+        std::abort();
+
+    if (!buffer[2].loadFromFile("Sound/bipRest.wav"))
+        std::abort();
+
+
     initializeSymbols();
     sf::Vector2f size_ = {(larg)/(NUM_BUTTONS/3),(alt)/(NUM_BUTTONS/4)};
     float y = alt;
@@ -51,6 +62,8 @@ Calculator::Calculator(){
         buttons.push_back(aux);
 
     }
+
+    mute = false;
 
 }
 
@@ -262,6 +275,16 @@ void Calculator::calculateResult(){
 
 
 void Calculator::calculatorLogic(std::string inf){
+    if(!mute){
+        if(isDigit(inf)){
+            sound.setBuffer(buffer[0]);
+        }else if(inf == "="){
+            sound.setBuffer(buffer[1]);
+        }else{
+            sound.setBuffer(buffer[2]);
+        }
+        sound.play();
+    }
     if(inf == "C"){
         equation.erase(equation.begin(),equation.end());
         answer.erase();
@@ -292,6 +315,8 @@ void Calculator::checkClick(sf::Event& event){
         }
 
     }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::F9))
+        mute = !mute;
 
 }
 void Calculator::update(sf::RenderWindow& win, sf::Event& event){
