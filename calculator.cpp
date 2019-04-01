@@ -11,10 +11,13 @@ void Calculator::initializeSymbols(){
     symbols.push_back("-");
     symbols.push_back("*");
     symbols.push_back("/");
+    symbols.push_back("^");
     symbols.push_back(".");
+    symbols.push_back("(");
+    symbols.push_back(")");
     symbols.push_back("=");
-    symbols.push_back("C");
     symbols.push_back("<-");
+    symbols.push_back("C");
 
 }
 
@@ -48,127 +51,235 @@ Calculator::Calculator(){
         buttons.push_back(aux);
 
     }
-    isAnswer = false;
 
 }
 
 
 bool Calculator::isOperator(std::string str){
-    if(str == "*" || str == "/" || str == "+" || str == "-")
+    if(str == "^" || str == "*" || str == "/" || str == "+" || str == "-")
         return true;
 
     return false;
 
 }
 
-bool Calculator::isNumber(std::string str){
+bool Calculator::isDigit(const std::string str){
     if(str == "0" || str == "1" || str == "2" || str == "3" ||
-       str == "4" || str == "5" || str == "6" || str == "7" ||
-       str == "8" || str =="9")
+        str == "4" || str == "5" || str == "6" || str == "7" ||
+          str == "8" || str == "9")
         return true;
 
     return false;
 
 }
 
-void Calculator::calculateResult(){
-    std::string::size_type sz;
-    float aux1 = std::stof(nextInformation, &sz);
-    float result, result1;
-    if(answer.empty()){
-        answer = nextInformation;
-        return;
-    }else{
-        result = std::stof(answer, &sz);
-        result1 = result;
-    }
-
-    if(lastOperator == "+"){
-        result+=aux1;
-        equation+="+";
-    }else if(lastOperator == "-"){
-        result-=aux1;
-        equation+="-";
-    }else if(lastOperator == "*"){
-        result1*=aux1;
-        equation+="*";
-    }else if(lastOperator == "/"){
-        result1/=aux1;
-        equation+="/";
-    }else
-        result = aux1;
-
-    lastOperator = "";
-
-    bool soHaZero = true;;
-    std::string str_aux = std::to_string(result);
-    std::size_t found = str_aux.find(".");
-
-    for(int i = found+1 ;i <str_aux.size();i++){
-        if(str_aux[i]!=0)
-            soHaZero = false;
-    }
-
-    if(soHaZero){
-        answer = std::to_string((int)result);
-    }
-
-    answer = str_aux;
-
-
+bool Calculator::isNumber(const std::string s){
+    std::istringstream iss(s);
+    float f;
+    iss >> std::noskipws >> f;
+    return iss.eof() && !iss.fail();
 }
 
-void Calculator::showLogic(std::string inf){
-    if(inf  == "C"){
-        equation.erase();
-        nextInformation.erase();
-        answer.erase();
-        isAnswer = false;
-    }else if(inf  == "<-"){
-        isAnswer = false;
-        if(nextInformation.size()!=0)
-            nextInformation.pop_back();
-    }else if(inf  == "=" && !nextInformation.empty() && isOperator(lastOperator) && isAnswer == false){
-        calculateResult();
-        equation += nextInformation;
-        nextInformation = answer;
-        isAnswer = true;
-    }else if(nextInformation.size()<20 && equation.size()<40){
-        if(!isOperator(inf)){
-            isAnswer = false;
-            if(lastInformation == "=" && inf != "."){
-                nextInformation.erase();
-                nextInformation+=inf;
-            }else if(inf  == "." &&  !nextInformation.empty()){
-                if(isNumber(lastInformation))
-                    nextInformation+=inf;
-                else if(isOperator(lastInformation)){
-                    nextInformation.erase();
-                    nextInformation+="0"+inf;
-                }
-            }else if(isNumber(inf) && isOperator(lastInformation)){
-                nextInformation.erase();
-                nextInformation+=inf;
-            }else if(isNumber(inf))
-                nextInformation+=inf;
+int precedence(const std::string symbol){
+	if(symbol == "^")
+	{
+		return(3);
+	}
+	else if(symbol == "*" || symbol == "/")
+	{
+		return(2);
+	}
+	else if(symbol == "+" || symbol == "-")
+	{
+		return(1);
+	}
+	else
+	{
+		return(0);
+	}
+}
 
-        }else if(isOperator(inf) && isAnswer == false){
-            lastOperator = inf;
-            if(isOperator(lastInformation) && !equation.empty()){
-                equation.pop_back();
-                equation+=inf;
-            }else if(!nextInformation.empty()){
-                equation+=inf;
-                equation+=nextInformation;
-                calculateResult();
-                nextInformation = answer;
-                isAnswer = true;
+
+void Calculator::adjustNumbers(){
+    std::string aux;
+    bool pointUsed;
+    unsigned int j = 0;
+    for(unsigned int i = 0; i<equation.size();i++){
+        if(isDigit(equation[i])){
+            pointUsed = false;
+            j = i+1;
+            aux+=equation[i];
+            while(j<equation.size() && (isDigit(equation[j]) || equation[j] == ".")){
+                if(pointUsed ==  true && equation[j] == ".")
+                    break;
+                if(equation[j] == ".")
+                    pointUsed = true;
+
+                aux+=equation[j];
+                equation.erase(equation.begin()+j);
+
+
             }
-
+            equation[i] = aux;
+            aux="";
         }
 
     }
-    lastInformation = inf;
+}
+
+bool Calculator::infixToPostfix(){
+    std::vector<std::string> infix = equation;
+    std::vector<std::string> postfix;
+    std::stack<std::string> inToPost;
+    infix.push_back(")");
+    inToPost.push("(");
+
+
+    for(unsigned int  i = 0; i<infix.size();i++){
+        if(isNumber(infix[i])){
+            postfix.push_back(infix[i]);
+            std::cout<<infix[i];
+        }else if(infix[i] == "("){
+            inToPost.push(infix[i]);
+
+        }else if(isOperator(infix[i])){
+            std::string x = inToPost.top();
+            inToPost.pop();
+			while(isOperator(x) == 1 && precedence(x)>= precedence(infix[i]))
+			{
+				postfix.push_back(x);
+				x = inToPost.top();
+				inToPost.pop();
+			}
+			inToPost.push(x);
+			inToPost.push(infix[i]);
+			std::cout<<inToPost.size();
+
+        }else if(infix[i] == ")"){
+            std::string x = inToPost.top();
+            inToPost.pop();
+			while(x!="(")
+			{
+				postfix.push_back(x);
+				x = inToPost.top();
+				inToPost.pop();
+			}
+        }else{
+            return false;
+        }
+
+    }
+
+    if(inToPost.size()>0)
+        return false;
+
+    equation = postfix;
+
+    return true;
+}
+
+std::string operation(std::string aux1, std::string aux2, std::string op){
+    float num1 = std::stof(aux1);
+    float num2 = std::stof(aux2);
+    float result;
+    if(op == "^"){
+        result =  std::pow(num1,num2);
+    }else if(op == "*"){
+        result = num1*num2;
+    }else if(op == "/"){
+        result = num1/num2;
+    }else if(op == "+"){
+        result = num1+num2;
+    }else if(op == "-"){
+        result = num1-num2;
+    }
+
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(2) << result;
+
+    return stream.str();
+}
+
+bool Calculator::result(){
+    std::stack<std::string> resultStack;
+    for(unsigned int i = 0; i<equation.size();i++){
+        if(isNumber(equation[i])){
+            resultStack.push(equation[i]);
+        }else if(isOperator(equation[i])){
+            if(resultStack.size()<=0){
+                return false;
+            }
+
+            std::string aux2 = resultStack.top();
+            resultStack.pop();
+            if(resultStack.size()<=0){
+                return false;
+            }
+            std::string aux1 = resultStack.top();
+            resultStack.pop();
+            if(isNumber(aux1) && isNumber(aux2)){
+
+                resultStack.push(operation(aux1,aux2,equation[i]));
+            }else{
+                return false;
+            }
+
+        }else{
+            return false;
+        }
+
+    }
+
+    answer = resultStack.top();
+    resultStack.pop();
+    if(!isNumber(answer))
+        return false;
+    if(resultStack.size()>0)
+        return false;
+
+    return true;
+
+}
+
+
+
+void Calculator::calculateResult(){
+
+    adjustNumbers();
+
+    if(!infixToPostfix()){
+        answer = "Invalid Expression";
+        return;
+    }
+
+    if(!result()){
+        answer = "Invalid Expression";
+        return;
+    }
+
+}
+
+
+
+void Calculator::calculatorLogic(std::string inf){
+    if(inf == "C"){
+        equation.erase(equation.begin(),equation.end());
+        answer.erase();
+    }else if(inf == "<-" && !equation.empty()){
+        equation.pop_back();
+    }else if(inf == "="){
+        calculateResult();
+        equation.erase(equation.begin(),equation.end());
+    }else {
+        if(inf == "<-")
+            return;
+
+        if(!equation.empty() && equation[0] == "Invalid Expression")
+            equation.erase(equation.begin(),equation.end());
+
+        equation.push_back(inf);
+        answer.erase();
+    }
 
 }
 
@@ -177,7 +288,7 @@ void Calculator::checkClick(sf::Event& event){
     for(auto i: buttons){
         inf = i.getInformation();
         if(i.checkMouse() && sf::Mouse::isButtonPressed(sf::Mouse::Left) && event.type == sf::Event::MouseButtonPressed){
-            showLogic(inf);
+            calculatorLogic(inf);
         }
 
     }
@@ -185,8 +296,6 @@ void Calculator::checkClick(sf::Event& event){
 }
 void Calculator::update(sf::RenderWindow& win, sf::Event& event){
     draw(win);
-
-
 
 }
 
@@ -223,9 +332,10 @@ void Calculator::draw(sf::RenderWindow& win){
         drawButtonsChar(win, i);
     }
 
-    drawText(win,equation,{0,10},50, sf::Color(128,128,128,100));
+    drawText(win,answer,{0,150},150, sf::Color::Green);
 
-    drawText(win,nextInformation,{0,50},100, sf::Color::Black);
+    for(unsigned int i = 0; i <equation.size();i++)
+        drawText(win,equation[i],{(float)i*30,0},100, sf::Color::Black);
 
 
     win.draw(outterRect);

@@ -4,9 +4,11 @@
 #include<vector>
 #include<stack>
 #include <windows.h>
+#include<sstream>
+#include<iomanip>
 
 
-#define NUM_BUTTONS 18
+#define NUM_BUTTONS 21
 
 const float larg = GetDeviceCaps(GetDC(NULL), HORZRES);
 const float alt = GetDeviceCaps(GetDC(NULL), VERTRES);
@@ -20,19 +22,11 @@ namespace Calc{
     class Calculator{
             std::vector<Useful::Button> buttons;
 
-            std::string equation;
-
-            std::string nextInformation;
-
-            std::string lastInformation;
-
-            std::string lastOperator;
-
-            std::string answer;
+            std::vector<std::string> equation;
 
             std::vector<std::string> symbols;
 
-            bool isAnswer;
+            std::string answer;
 
             sf::Font font;
 
@@ -48,11 +42,19 @@ namespace Calc{
 
             bool isOperator(std::string str);
 
+            bool isDigit(const std::string str);
+
             bool isNumber(std::string str);
 
             Useful::Button createButton(sf::Vector2f pos, sf::Vector2f size_, sf::Color color,sf::Color secondaryColor, std::string type);
 
-            void showLogic(std::string inf);
+            void calculatorLogic(std::string inf);
+
+            void adjustNumbers();
+
+            bool infixToPostfix();
+
+            bool result();
 
             void calculateResult();
 
