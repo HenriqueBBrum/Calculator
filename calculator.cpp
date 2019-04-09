@@ -311,7 +311,12 @@ void Calculator::checkClick(sf::Event& event){
     for(auto i: buttons){
         inf = i.getInformation();
         if(i.checkMouse() && sf::Mouse::isButtonPressed(sf::Mouse::Left) && event.type == sf::Event::MouseButtonPressed){
-            calculatorLogic(inf);
+            if(equation.size()*larg/19<larg)
+                calculatorLogic(inf);
+            else{
+                if(inf  == "C" || inf  == "<-" || inf  == "=")
+                    calculatorLogic(inf);
+            }
         }
 
     }
@@ -339,7 +344,7 @@ void Calculator::drawText(sf::RenderWindow& win, std::string str, sf::Vector2f p
 void Calculator::drawButtonsChar(sf::RenderWindow& win, Useful::Button button){
     sf::Vector2f pos({button.getPosition().x + 50, button.getPosition().y + 50});
 
-    drawText(win,button.getInformation(),pos, 100,sf::Color::Black);
+    drawText(win,button.getInformation(),pos, larg/15,sf::Color::Black);
 
 }
 
@@ -357,10 +362,10 @@ void Calculator::draw(sf::RenderWindow& win){
         drawButtonsChar(win, i);
     }
 
-    drawText(win,answer,{0,150},150, sf::Color::Green);
+    drawText(win,answer,{0,150},larg/10, sf::Color::Green);
 
     for(unsigned int i = 0; i <equation.size();i++)
-        drawText(win,equation[i],{(float)i*30,0},100, sf::Color::Black);
+        drawText(win,equation[i],{(float)i*30,0},larg/15, sf::Color::Black);
 
 
     win.draw(outterRect);
